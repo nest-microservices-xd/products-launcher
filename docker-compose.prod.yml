@@ -1,0 +1,60 @@
+services:
+  nats-server:
+    image: nats:latest
+
+  client-gateway:
+    build:
+      context: ./client-gateway
+      dockerfile: dockerfile.prod
+    image: client-gateway-prod
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      - PORT=${PORT}
+      - NATS_SERVERS=nats://nats-server:4222
+
+  products-ms:
+    build:
+      context: ./products-ms
+      dockerfile: dockerfile.prod
+    image: products-ms
+    environment:
+      - PORT=${PORT}
+      - DATABASE_URL=file:./dev.db
+      - NATS_SERVERS=nats://nats-server:4222
+
+  # orders-ms:
+  #   depends_on:
+  #     - orders-db
+  #   build: ./orders-ms
+  #   volumes:
+  #     - ./orders-ms/src:/usr/src/app/src
+  #   command: npm run start:dev
+  #   environment:
+  #     - PORT=3002
+  #     - DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb?schema=public
+  #     - NATS_SERVERS=nats://nats-server:4222
+
+  # orders-db:
+  #   container_name: orders-database
+  #   image: postgres:16.2
+  #   restart: always
+  #   volumes:
+  #     - ./orders-ms/postgres:/var/lib/postgresql/data
+  #   ports:
+  #     - 5432:5432
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=123456
+  #     - POSTGRES_DB=ordersdb
+
+  # auth-ms:
+  #   build:
+  #     context: ./auth-ms
+  #     dockerfile: dockerfile.prod
+  #   image: auth-ms
+  #   environment:
+  #     - PORT=${PORT}
+  #     - NATS_SERVERS=nats://nats-server:4222
+  #     - DATABASE_URL=${AUTH_DATABASE_URL}
+  #     - JWT_SECRET=${JWT_SECRET}
